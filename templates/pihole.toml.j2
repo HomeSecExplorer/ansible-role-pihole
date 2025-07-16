@@ -1,0 +1,243 @@
+[dns]
+  upstreams = [
+  {% for server in hseph_upstreams %}
+    "{{ server }}"{% if not loop.last %},{% endif %}
+  {% endfor %}
+  ]
+  CNAMEdeepInspect = {{ hseph_dns_cnamedeepinspect }}
+  blockESNI = {{ hseph_dns_blockesni }}
+  EDNS0ECS = {{ hseph_dns_edns0ecs }}
+  ignoreLocalhost = {{ hseph_dns_ignorelocalhost }}
+  showDNSSEC = {{ hseph_dns_showdnssec }}
+  analyzeOnlyAandAAAA = {{ hseph_dns_analyzeonlyaandaaaa }}
+  piholePTR = "{{ hseph_dns_piholeptr }}"
+  replyWhenBusy = "{{ hseph_dns_replywhenbusy }}"
+  blockTTL = {{ hseph_dns_blockttl }}
+  hosts = [
+  {% for host in hseph_dns_hosts %}
+    "{{ host }}"{% if not loop.last %}, {% endif %}
+  {% endfor %}
+  ]
+  domainNeeded = {{ hseph_dns_domainneeded }}
+  expandHosts = {{ hseph_dns_expandhosts }}
+  domain = "{{ hseph_dns_domain }}"
+  bogusPriv = {{ hseph_dns_boguspriv }}
+  dnssec = {{ hseph_dns_dnssec }}
+  interface = "{{ hseph_dns_interface }}"
+  hostRecord = "{{ hseph_dns_hostrecord }}"
+  listeningMode = "{{ hseph_dns_listeningmode }}"
+  queryLogging = {{ hseph_dns_querylogging }}
+  cnameRecords = [
+  {% for cname in hseph_dns_cnamerecords %}
+    "{{ cname }}"{% if not loop.last %}, {% endif %}
+  {% endfor %}
+  ]
+  port = {{ hseph_dns_port }}
+  revServers = [
+  {% for rev in hseph_dns_revservers %}
+    "{{ rev }}"{% if not loop.last %}, {% endif %}
+  {% endfor %}
+  ]
+
+  [dns.cache]
+    size = {{ hseph_dns_cache_size }}
+    optimizer = {{ hseph_dns_cache_optimizer }}
+    upstreamBlockedTTL = {{ hseph_dns_cache_upstreamblockedttl }}
+
+  [dns.blocking]
+    active = {{ hseph_dns_blocking_active }}
+    mode = "{{ hseph_dns_blocking_mode }}"
+    edns = "{{ hseph_dns_blocking_edns }}"
+
+  [dns.specialDomains]
+    mozillaCanary = {{ hseph_dns_specialdomains_mozillacanary }}
+    iCloudPrivateRelay = {{ hseph_dns_specialdomains_icloudprivaterelay }}
+    designatedResolver = {{ hseph_dns_specialdomains_designatedresolver }}
+
+    [dns.reply.host]
+      force4 = {{ hseph_dns_reply_host_force4 }}
+      IPv4 = "{{ hseph_dns_reply_host_ipv4 }}"
+      force6 = {{ hseph_dns_reply_host_force6 }}
+      IPv6 = "{{ hseph_dns_reply_host_ipv6 }}"
+
+    [dns.reply.blocking]
+      force4 = {{ hseph_dns_reply_blocking_force4 }}
+      IPv4 = "{{ hseph_dns_reply_blocking_ipv4 }}"
+      force6 = {{ hseph_dns_reply_blocking_force6 }}
+      IPv6 = "{{ hseph_dns_reply_blocking_ipv6 }}"
+
+  [dns.rateLimit]
+    count = {{ hseph_dns_ratelimit_count }}
+    interval = {{ hseph_dns_ratelimit_interval }}
+
+[dhcp]
+  active = {{ hseph_dhcp_active }}
+  start = "{{ hseph_dhcp_start }}"
+  end = "{{ hseph_dhcp_end }}"
+  router = "{{ hseph_dhcp_router }}"
+  netmask = "{{ hseph_dhcp_netmask }}"
+  leaseTime = "{{ hseph_dhcp_leasetime }}"
+  ipv6 = {{ hseph_dhcp_ipv6 }}
+  rapidCommit = {{ hseph_dhcp_rapidcommit }}
+  multiDNS = {{ hseph_dhcp_multidns }}
+  logging = {{ hseph_dhcp_logging }}
+  ignoreUnknownClients = {{ hseph_dhcp_ignoreunknownclients }}
+  hosts = [
+  {% for host in hseph_dhcp_hosts %}
+    "{{ host }}"{% if not loop.last %}, {% endif %}
+  {% endfor %}
+  ]
+
+[ntp.ipv4]
+  active = {{ hseph_ntp_ipv4_active }}
+  address = "{{ hseph_ntp_ipv4_address }}"
+
+[ntp.ipv6]
+  active = {{ hseph_ntp_ipv6_active }}
+  address = "{{ hseph_ntp_ipv6_address }}"
+
+[ntp.sync]
+  active = {{ hseph_ntp_sync_active }}
+  server = "{{ hseph_ntp_sync_server }}"
+  interval = {{ hseph_ntp_sync_interval }}
+  count = {{ hseph_ntp_sync_count }}
+
+  [ntp.sync.rtc]
+    set = {{ hseph_ntp_sync_rtc_set }}
+    device = "{{ hseph_ntp_sync_rtc_device }}"
+    utc = {{ hseph_ntp_sync_rtc_utc }}
+
+[resolver]
+  resolveIPv4 = {{ hseph_resolver_resolveipv4 }}
+  resolveIPv6 = {{ hseph_resolver_resolveipv6 }}
+  networkNames = {{ hseph_resolver_networknames }}
+  refreshNames = "{{ hseph_resolver_refreshnames }}"
+
+[database]
+  DBimport = {{ hseph_database_dbimport }}
+  maxDBdays = {{ hseph_database_maxdbdays }}
+  DBinterval = {{ hseph_database_dbinterval }}
+  useWAL = {{ hseph_database_usewal }}
+
+  [database.network]
+    parseARPcache = {{ hseph_database_network_parsearpcache }}
+    expire = {{ hseph_database_network_expire }}
+
+[webserver]
+  domain = "{{ hseph_webserver_domain }}"
+  acl = "{{ hseph_webserver_acl }}"
+  port = "{{ hseph_webserver_port }}"
+  threads = {{ hseph_webserver_threads }}
+  headers = [
+  {% for header in hseph_webserver_headers %}
+    "{{ header }}"{% if not loop.last %},{% endif %}
+  {% endfor %}
+  ]
+  serve_all = {{ hseph_webserver_serve_all }}
+
+  [webserver.session]
+    timeout = {{ hseph_webserver_session_timeout }}
+    restore = {{ hseph_webserver_session_restore }}
+
+  [webserver.tls]
+    cert = "{{ hseph_webserver_tls_cert }}"
+
+  [webserver.paths]
+    webroot = "{{ hseph_webserver_paths_webroot }}"
+    webhome = "{{ hseph_webserver_paths_webhome }}"
+    prefix = "{{ hseph_webserver_paths_prefix }}"
+
+  [webserver.interface]
+    boxed = {{ hseph_webserver_interface_boxed }}
+    theme = "{{ hseph_webserver_interface_theme }}"
+
+  [webserver.api]
+    max_sessions = {{ hseph_webserver_api_max_sessions }}
+    prettyJSON = {{ hseph_webserver_api_prettyjson }}
+    pwhash = "{{ hseph_webserver_api_pwhash }}"
+    totp_secret = "{{ hseph_webserver_api_totp_secret }}"
+    app_pwhash = "{{ hseph_webserver_api_app_pwhash }}"
+    app_sudo = {{ hseph_webserver_api_app_sudo }}
+    cli_pw = {{ hseph_webserver_api_cli_pw }}
+    excludeClients = [
+    {% for client in hseph_webserver_api_excludeclients %}
+      "{{ client }}"{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    ]
+    excludeDomains = [
+    {% for domain in hseph_webserver_api_excludedomains %}
+      "{{ domain }}"{% if not loop.last %}, {% endif %}
+    {% endfor %}
+    ]
+    maxHistory = {{ hseph_webserver_api_maxhistory }}
+    maxClients = {{ hseph_webserver_api_maxclients }}
+    client_history_global_max = {{ hseph_webserver_api_client_history_global_max }}
+    allow_destructive = {{ hseph_webserver_api_allow_destructive }}
+
+    [webserver.api.temp]
+      limit = {{ hseph_webserver_api_temp_limit }}
+      unit = "{{ hseph_webserver_api_temp_unit }}"
+[files]
+  pid = "{{ hseph_files_pid }}"
+  database = "{{ hseph_files_database }}"
+  gravity = "{{ hseph_files_gravity }}"
+  gravity_tmp = "{{ hseph_files_gravity_tmp }}"
+  macvendor = "{{ hseph_files_macvendor }}"
+  setupVars = "{{ hseph_files_setupvars }}"
+  pcap = "{{ hseph_files_pcap }}"
+
+  [files.log]
+    ftl = "{{ hseph_files_log_ftl }}"
+    dnsmasq = "{{ hseph_files_log_dnsmasq }}"
+    webserver = "{{ hseph_files_log_webserver }}"
+
+[misc]
+  privacylevel = {{ hseph_misc_privacylevel }}
+  delay_startup = {{ hseph_misc_delay_startup }}
+  nice = {{ hseph_misc_nice }}
+  addr2line = {{ hseph_misc_addr2line }}
+  etc_dnsmasq_d = {{ hseph_misc_etc_dnsmasq_d }}
+  dnsmasq_lines = [
+  {% for line in hseph_misc_dnsmasq_lines %}
+    "{{ line }}"{% if not loop.last %}, {% endif %}
+  {% endfor %}
+  ]
+  extraLogging = {{ hseph_misc_extralogging }}
+  readOnly = {{ hseph_misc_readonly }}
+
+  [misc.check]
+    load = {{ hseph_misc_check_load }}
+    shmem = {{ hseph_misc_check_shmem }}
+    disk = {{ hseph_misc_check_disk }}
+
+[debug]
+  database = {{ hseph_debug_database }}
+  networking = {{ hseph_debug_networking }}
+  locks = {{ hseph_debug_locks }}
+  queries = {{ hseph_debug_queries }}
+  flags = {{ hseph_debug_flags }}
+  shmem = {{ hseph_debug_shmem }}
+  gc = {{ hseph_debug_gc }}
+  arp = {{ hseph_debug_arp }}
+  regex = {{ hseph_debug_regex }}
+  api = {{ hseph_debug_api }}
+  tls = {{ hseph_debug_tls }}
+  overtime = {{ hseph_debug_overtime }}
+  status = {{ hseph_debug_status }}
+  caps = {{ hseph_debug_caps }}
+  dnssec = {{ hseph_debug_dnssec }}
+  vectors = {{ hseph_debug_vectors }}
+  resolver = {{ hseph_debug_resolver }}
+  edns0 = {{ hseph_debug_edns0 }}
+  clients = {{ hseph_debug_clients }}
+  aliasclients = {{ hseph_debug_aliasclients }}
+  events = {{ hseph_debug_events }}
+  helper = {{ hseph_debug_helper }}
+  config = {{ hseph_debug_config }}
+  inotify = {{ hseph_debug_inotify }}
+  webserver = {{ hseph_debug_webserver }}
+  extra = {{ hseph_debug_extra }}
+  reserved = {{ hseph_debug_reserved }}
+  ntp = {{ hseph_debug_ntp }}
+  netlink = {{ hseph_debug_netlink }}
+  all = {{ hseph_debug_all }}

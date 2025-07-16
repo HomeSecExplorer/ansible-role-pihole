@@ -1,0 +1,11 @@
+---
+- name: restart piholeFTL
+  ansible.builtin.systemd:
+    name: pihole-FTL.service
+    state: restarted
+    enabled: true
+  throttle: 1
+
+- name: update gravity
+  ansible.builtin.shell: pihole -g
+  throttle: 1

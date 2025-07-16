@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  author: HomeSec Explorer
+  description: >
+    Ansible role to install and configure Pi-hole v6 on Debian/Ubuntu.
+    Supports full lifecycle management, defaults to cloudflared DoH via the homesecexplorer.cloudflared role.
+    Ideal for homelabs, self-hosted DNS, and privacy-focused setups.
+  role_name: pihole
+  namespace: homesecexplorer
+  license: MIT
+  min_ansible_version: '2.13'
+
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+        - bullseye
+    - name: Ubuntu
+      versions:
+        - noble
+        - jammy
+
+  galaxy_tags:
+    - pihole
+    - dns
+    - dnsmasq
+    - adblock
+    - blocking
+    - selfhosted
+    - homelab
+    - privacy
+
+dependencies: []

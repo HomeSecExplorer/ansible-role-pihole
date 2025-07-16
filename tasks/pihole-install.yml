@@ -1,0 +1,37 @@
+---
+- name: Create pihole system group
+  ansible.builtin.group:
+    name: 'pihole'
+    state: 'present'
+
+- name: Create pihole system user (nologin shell)
+  ansible.builtin.user:
+    name: 'pihole'
+    state: 'present'
+    group: 'pihole'
+    system: true
+    shell: '/usr/sbin/nologin'
+
+- name: Create Pi-Hole configuration directory
+  ansible.builtin.file:
+    path: '/etc/pihole'
+    state: 'directory'
+    owner: 'pihole'
+    group: 'pihole'
+    mode: '0775'
+
+- name: Prepare Pi-Hole configuration
+  ansible.builtin.template:
+    src: 'setupVars.conf.j2'
+    dest: '/etc/pihole/setupVars.conf'
+    owner: 'pihole'
+    group: 'pihole'
+    mode: '0544'
+
+- name: Install PiHole
+  ansible.builtin.shell: >
+    curl -sSL https://install.pi-hole.net | PIHOLE_SKIP_OS_CHECK=true bash /dev/stdin --unattended
+  args:
+    creates: /etc/pihole/pihole.toml
+  register: install
+  failed_when: install.rc !=0

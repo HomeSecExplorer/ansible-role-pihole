@@ -1,0 +1,57 @@
+---
+- name: Configure PiHole
+  ansible.builtin.template:
+    src: 'pihole.toml.j2'
+    dest: '/etc/pihole/pihole.toml'
+    owner: 'pihole'
+    group: 'pihole'
+    mode: '0644'
+  changed_when: false
+
+- name: Configure DNS entrys
+  ansible.builtin.template:
+    src: '{{ __hseph_dns_file.template }}'
+    dest: '/etc/dnsmasq.d/{{ __hseph_dns_file.dest }}'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  loop: '{{ hseph_dns_file }}'
+  loop_control:
+    loop_var: "__hseph_dns_file"
+  when: hseph_local_dns_entry | bool
+  notify: restart piholeFTL
+
+- name: Configure Blocklists
+  ansible.builtin.shell: >
+    pihole-FTL sqlite3 /etc/pihole/gravity.db
+    "INSERT INTO adlist (address, enabled, comment, type)
+    VALUES ('{{ __hseph_blocklist.url }}', {{ __hseph_blocklist.enable | int }}, '{{ __hseph_blocklist.comment | default('') }}', 0)
+    ON CONFLICT(address, type) DO UPDATE SET
+      enabled = excluded.enabled,
+      comment = excluded.comment
+    WHERE enabled IS NOT excluded.enabled OR comment IS NOT excluded.comment;
+    SELECT changes();"
+  loop: '{{ hseph_pihole_blocklist }}'
+  loop_control:
+    loop_var: "__hseph_blocklist"
+  register: adlist_result
+  changed_when: adlist_result.stdout | int > 0
+  notify: update gravity
+
+- name: Configure Domainlists
+  ansible.builtin.shell: >
+    pihole-FTL sqlite3 /etc/pihole/gravity.db
+    "INSERT INTO domainlist (type, domain, enabled, comment)
+    VALUES ({{ __hseph_domainlist.type }}, '{{ __hseph_domainlist.domain }}', {{ __hseph_domainlist.enabled | int }},
+    '{{ item.comment | default('') }}')
+    ON CONFLICT(domain, type) DO UPDATE SET
+      enabled = excluded.enabled,
+      comment = excluded.comment
+    WHERE enabled IS NOT excluded.enabled OR comment IS NOT excluded.comment;
+    SELECT changes();"
+  loop: '{{ hseph_pihole_domainlist }}'
+  loop_control:
+    loop_var: "__hseph_domainlist"
+  register: domainlist_result
+  changed_when: domainlist_result.stdout | int > 0
+  notify: update gravity

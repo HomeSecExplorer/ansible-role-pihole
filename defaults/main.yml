@@ -1,0 +1,454 @@
+---
+# Provide a precomputed password hash for the PiHole web UI.
+# To generate it: get hash with echo -n Passw0rd | sha256sum | awk '{printf '%s',$1 }' | sha256sum | awk '{printf $1 }'
+# This value overrides hseph_pw_plain if defined and not empty.
+hseph_pw_hash: ''
+# Fallback plaintext password used only if hseph_pw_hash is empty.
+# For production use, avoid storing plaintext passwords in your playbooks.
+hseph_pw_plain: 'Passw0rd'
+
+# Role control switches
+hseph_install: true  # Set to true to install PiHole if not already installed.
+hseph_uninstall: false  # Set to true to uninstall PiHole
+hseph_update: true  # Set to true to run PiHole updates (requires PiHole v6).
+hseph_configure: true  # Set to true to apply TOML and blocklist configuration (requires PiHole v6).
+hseph_os_check: true  # Check if the OS is supported before continuing. (Role support - not official PiHole support)
+
+# List of PiHole blocklists to import into gravity.db
+# Each entry should include:
+#   - url: the list URL
+#   - enable: 1 to enable, 0 to disable
+#   - comment: an optional description for the list
+# Does not delete entries; use `enable: 0` to disable them instead
+hseph_pihole_blocklist:
+  - {url: 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts', enable: '1', comment: 'default'}
+  # - {url: 'https://v.firebog.net/hosts/AdguardDNS.txt', enable: '1', comment: 'Ads'}
+  # - {url: 'https://v.firebog.net/hosts/Admiral.txt', enable: '1', comment: 'Ads'}
+  # - {url: 'https://adaway.org/hosts.txt', enable: '1', comment: 'Ads'}
+  # - {url: 'https://v.firebog.net/hosts/Easyprivacy.txt', enable: '1', comment: 'Tracking'}
+  # - {url: 'https://v.firebog.net/hosts/Prigent-Ads.txt', enable: '1', comment: 'Tracking'}
+  # - {url: 'https://v.firebog.net/hosts/static/w3kbl.txt', enable: '1', comment: ''}
+  # - {url: 'https://raw.githubusercontent.com/RPiList/specials/master/Blocklisten/notserious', enable: '1', comment: 'Fakes'}
+  # - {url: 'https://raw.githubusercontent.com/DandelionSprout/adfilt/master/Alternate%20versions%20Anti-Malware%20List/AntiMalwareHosts.txt', enable: '1', comment: 'Malware'}
+  # - {url: 'https://v.firebog.net/hosts/Prigent-Crypto.txt', enable: '1', comment: 'Malicious'}
+  # - {url: 'https://raw.githubusercontent.com/blocklistproject/Lists/master/ransomware.txt', enable: '1', comment: 'Ransomware'}
+  # - {url: 'https://phishing.army/download/phishing_army_blocklist_extended.txt', enable: '1', comment: 'Phishing'}
+
+# List of domains to import into domainlist table
+# Each entry includes:
+#   - domain: the domain or regex string
+#   - type: 0 = exact whitelist, 1 = exact blacklist, 2 = regex whitelist, 3 = regex blacklist
+#   - enabled: 1 to enable, 0 to disable
+#   - comment: optional description
+# Does not delete entries; use `enable: 0` to disable them instead
+hseph_pihole_domainlist:
+  - {domain: 'example.com', type: '1', enabled: '1', comment: 'Block example.com'}
+  # - {domain: 'learn.cisecurity.org', type: 0, enabled: 1, comment: 'Allow CIS'}
+  # - {domain: 'go.pardot.com', type: 0, enabled: 1, comment: 'Allow CIS'}
+
+# Enable creation of local DNS entries using templates.
+hseph_local_dns_entry: true
+
+# List of DNS template definitions.
+# Each entry must include:
+#   - template: template source (e.g., default_dns.conf.j2)
+#   - dest: Destination filename under /etc/dnsmasq.d/
+# This example dynamically generates entries for each host in your inventory if
+# `hseph_dns_for_inventory` is true and your inventory is in the format:
+#     <hostname> ansible_host=<IP>
+# The value of `hseph_dns_domain` is used as the DNS domain suffix.
+hseph_dns_file:
+  - { template: 'default_dns.conf.j2', dest: '00.{{ hseph_dns_domain }}.conf' }
+
+# Enable generation of DNS records from your Ansible inventory.
+hseph_dns_for_inventory: true
+
+# Additional static DNS entries to include in the default_dns.conf.j2 template output.
+# Examples:
+# - Redirect all unmatched domain requests to a local IP.
+# - Define static host records.
+hseph_dns_entries:
+  - 'address=/{{ hseph_dns_domain }}/192.168.0.1'                     # Forward unresolved domain to specific IP
+#  - 'host-record=syslog,syslog.{{ hseph_dns_domain }},10.10.11.11'   # Define a static host entry for syslog server
+
+
+# PiHole config
+hseph_dns_domain: 'lan'  # Local DNS domain
+# Array of upstream DNS servers (IP or hostname, optionally with port)
+hseph_upstreams:
+  - '127.0.0.1#5053'
+  - '127.0.0.1#5054'
+# Whether to enable deep CNAME inspection. Useful for blocking CNAME cloaking.
+hseph_dns_cnamedeepinspect: true
+# Whether to block ESNI (Encrypted Server Name Indication) subdomains.
+hseph_dns_blockesni: true
+# Use EDNS0 client subnet information to identify clients behind NAT.
+hseph_dns_edns0ecs: true
+# Hide queries made by localhost from logs and statistics.
+hseph_dns_ignorelocalhost: false
+# Show DNSSEC-related queries in the query log.
+hseph_dns_showdnssec: true
+# Only analyze A and AAAA DNS queries.
+hseph_dns_analyzeonlyaandaaaa: false
+# How PiHole should respond to PTR queries for its own IP.
+# Valid values: "PI.HOLE", "HOSTNAME", "HOSTNAMEFQDN", "NONE"
+hseph_dns_piholeptr: 'PI.HOLE'
+# How to reply when the gravity database is busy.
+# Valid values: "ALLOW", "BLOCK", "REFUSE", "DROP"
+hseph_dns_replywhenbusy: 'REFUSE'
+# TTL for blocked queries, in seconds. Larger values may cache blocks longer.
+# Valid values: integer (e.g., "2")
+hseph_dns_blockttl: '2'
+# Custom DNS records to be added (e.g., '192.168.1.10 printer').
+# Valid values: array of strings or empty string
+hseph_dns_hosts: ''
+# Prevent forwarding of queries without a dot to upstream.
+hseph_dns_domainneeded: false
+# Automatically add domain to simple hostnames in /etc/hosts.
+hseph_dns_expandhosts: false
+# Reply 'no such domain' for private IP reverse lookups not found locally.
+hseph_dns_boguspriv: true
+# Enable DNSSEC validation of upstream replies.
+hseph_dns_dnssec: false
+# Interface to use for DNS and DHCP (if enabled).
+# Valid values: interface name or empty string
+hseph_dns_interface: ''
+# Add A/AAAA/PTR records manually.
+# Format: <name>[,<name>...],[<IPv4>],[<IPv6>][,<TTL>]
+hseph_dns_hostrecord: ''
+# DNS server interface listening mode.
+# Valid values: 'LOCAL', 'SINGLE', 'BIND', 'ALL', 'NONE'
+hseph_dns_listeningmode: 'LOCAL'
+# Enable or disable query logging to pihole.log.
+hseph_dns_querylogging: true
+# Custom CNAME entries.
+# Format: "<cname>,<target>[,<TTL>]" or empty string
+hseph_dns_cnamerecords: ''
+# Port used by the DNS server.
+hseph_dns_port: '53'
+# Reverse (conditional) forwarding servers.
+# Format: array of "true,<ip/cidr>,<server>[#port][,<domain>]"
+hseph_dns_revservers: ''
+# Size of the DNS query cache.
+hseph_dns_cache_size: '10000'
+# Time (in seconds) to serve expired cache entries if still fresh.
+# Valid values: 0–86400 or negative to disable
+hseph_dns_cache_optimizer: '3600'
+# TTL for blocked queries cached upstream.
+# Valid values: integer (e.g., '86400') or '0' to disable
+hseph_dns_cache_upstreamblockedttl: '86400'
+# Enable or disable DNS query blocking.
+hseph_dns_blocking_active: true
+# Response mode for blocked queries.
+# Valid values: 'NULL', 'IP', 'NX', 'NODATA', 'IP_NODATA_AAAA'
+hseph_dns_blocking_mode: 'NULL'
+# Whether to enrich blocked responses with EDNS info.
+# Valid values: 'NONE', 'CODE', 'TEXT'
+hseph_dns_blocking_edns: 'TEXT'
+# Block Firefox DoH detection domain (use-application-dns.net).
+hseph_dns_specialdomains_mozillacanary: true
+# Block Apple's iCloud Private Relay bypass domains.
+hseph_dns_specialdomains_icloudprivaterelay: true
+# Block designated resolver bypass queries.
+hseph_dns_specialdomains_designatedresolver: true
+# Force use of a specific IPv4 address for the PiHole host.
+hseph_dns_reply_host_force4: false
+# Custom IPv4 address to use for the PiHole host.
+# Valid values: valid IPv4 address or empty string
+hseph_dns_reply_host_ipv4: ''
+# Force use of a specific IPv6 address for the PiHole host.
+hseph_dns_reply_host_force6: false
+# Custom IPv6 address to use for the PiHole host.
+# Valid values: valid IPv6 address or empty string
+hseph_dns_reply_host_ipv6: ''
+# Force use of a specific IPv4 address for blocking in IP mode.
+hseph_dns_reply_blocking_force4: false
+# Custom IPv4 address to reply with in blocking mode.
+# Valid values: valid IPv4 address or empty string
+hseph_dns_reply_blocking_ipv4: ''
+# Force use of a specific IPv6 address for blocking in IP mode.
+hseph_dns_reply_blocking_force6: false
+# Custom IPv6 address to reply with in blocking mode.
+# Valid values: valid IPv6 address or empty string
+hseph_dns_reply_blocking_ipv6: ''
+# Maximum number of queries allowed per interval per client.
+hseph_dns_ratelimit_count: '1000'
+# Interval duration in seconds for rate-limiting.
+hseph_dns_ratelimit_interval: '60'
+# Enable the built-in DHCP server.
+hseph_dhcp_active: false
+# Start address of the DHCP pool.
+# Valid values: valid IPv4 address or empty string
+hseph_dhcp_start: ''
+# End address of the DHCP pool.
+# Valid values: valid IPv4 address or empty string
+hseph_dhcp_end: ''
+# Default gateway to advertise.
+# Valid values: valid IPv4 address or empty string
+hseph_dhcp_router: ''
+# Netmask to use (optional if directly connected).
+# Valid values: valid netmask or empty string
+hseph_dhcp_netmask: ''
+# DHCP lease time.
+# Valid values: duration string (e.g. '1h', '2d') or empty string
+hseph_dhcp_leasetime: ''
+# Enable DHCP for IPv6.
+hseph_dhcp_ipv6: false
+# Enable rapid commit DHCPv4 option.
+hseph_dhcp_rapidcommit: false
+# Advertise PiHole multiple times as DNS server.
+hseph_dhcp_multidns: false
+# Enable DHCP-related logging.
+hseph_dhcp_logging: false
+# Ignore clients not listed in static leases.
+hseph_dhcp_ignoreunknownclients: false
+# List of static DHCP leases.
+# Format: "[<hwaddr>][,id:<client_id>|*][,set:<tag>][,tag:<tag>][,<ipaddr>][,<hostname>][,<lease_time>][,ignore]" or empty string
+hseph_dhcp_hosts: ''
+# Enable NTP server on IPv4.
+hseph_ntp_ipv4_active: true
+# IPv4 address to listen on for NTP.
+# Valid values: valid IPv4 address or empty string
+hseph_ntp_ipv4_address: ''
+# Enable NTP server on IPv6.
+hseph_ntp_ipv6_active: true
+# IPv6 address to listen on for NTP.
+# Valid values: valid IPv6 address or empty string
+hseph_ntp_ipv6_address: ''
+# Enable synchronization with an upstream NTP server.
+hseph_ntp_sync_active: true
+# Upstream NTP server to sync with.
+# Valid values: valid hostname or IP address
+hseph_ntp_sync_server: 'pool.ntp.org'
+# Interval in seconds between NTP syncs.
+hseph_ntp_sync_interval: '3600'
+# Number of sync attempts before updating system time.
+hseph_ntp_sync_count: '8'
+# Enable updating of the RTC device if present.
+hseph_ntp_sync_rtc_set: false
+# Path to the RTC device.
+# Valid values: valid path or empty string for auto-discovery
+hseph_ntp_sync_rtc_device: ''
+# Set RTC to UTC instead of local time.
+hseph_ntp_sync_rtc_utc: true
+# Enable reverse resolution of IPv4 addresses to hostnames.
+hseph_resolver_resolveipv4: true
+# Enable reverse resolution of IPv6 addresses to hostnames.
+hseph_resolver_resolveipv6: true
+# Try to resolve hostnames via MAC mapping when DNS fails.
+hseph_resolver_networknames: true
+# Controls frequency of PTR lookups.
+# Valid values: 'IPV4_ONLY', 'ALL', 'UNKNOWN', 'NONE'
+hseph_resolver_refreshnames: 'IPV4_ONLY'
+# Import query history from the database at startup.
+hseph_database_dbimport: true
+# How many days to retain query history in the database.
+# Valid values: integer as string, '0' disables DB use
+hseph_database_maxdbdays: '91'
+# Interval in seconds between writing queries to the DB.
+hseph_database_dbinterval: '60'
+# Enable SQLite Write-Ahead Logging mode.
+hseph_database_usewal: true
+# Parse local ARP cache for network info.
+hseph_database_network_parsearpcache: true
+# Retention period (in days) for client network data.
+hseph_database_network_expire: '91'
+# Domain name used to access the web interface.
+# Valid values: valid domain name
+hseph_webserver_domain: 'pi.hole'
+# Access control list for the web interface.
+# Valid values: ACL string (e.g., '+192.168.0.0/16') or empty
+hseph_webserver_acl: ''
+# Comma-separated list of web server ports (HTTP/HTTPS).
+# Valid values: '[::]:443s', '80o,443os', etc.
+hseph_webserver_port: '80o,443os,[::]:80o,[::]:443os'
+# Maximum number of concurrent web threads.
+hseph_webserver_threads: '50'
+# Additional HTTP headers to include in responses.
+# Valid values: list of valid headers
+hseph_webserver_headers:
+  - 'X-DNS-Prefetch-Control: off'
+  - 'Content-Security-Policy: default-src ''self'' ''unsafe-inline'';'
+  - 'X-Frame-Options: DENY'
+  - 'X-XSS-Protection: 0'
+  - 'X-Content-Type-Options: nosniff'
+  - 'Referrer-Policy: strict-origin-when-cross-origin'
+# Serve all files in the webroot.
+hseph_webserver_serve_all: false
+# Session timeout duration in seconds.
+hseph_webserver_session_timeout: '1800'
+# Restore sessions from database after restart.
+hseph_webserver_session_restore: true
+# Path to TLS certificate PEM file.
+# Valid values: valid file path to .pem
+hseph_webserver_tls_cert: '/etc/pihole/tls.pem'
+# Root directory of the web server.
+# Valid values: valid path
+hseph_webserver_paths_webroot: '/var/www/html'
+# Subdirectory containing the PiHole web UI.
+# Valid values: valid subpath (e.g., '/admin/')
+hseph_webserver_paths_webhome: '/admin/'
+# Prefix path if served behind a reverse proxy.
+# Valid values: valid path prefix or empty
+hseph_webserver_paths_prefix: ''
+# Use boxed layout on the web interface.
+hseph_webserver_interface_boxed: true
+# Theme of the web interface.
+# Valid values: 'default-auto', 'default-light', 'default-dark', 'default-darker', 'high-contrast', 'high-contrast-dark', 'lcars'
+hseph_webserver_interface_theme: 'default-auto'
+# Max number of concurrent API sessions.
+hseph_webserver_api_max_sessions: '16'
+# Prettify API JSON output.
+hseph_webserver_api_prettyjson: false
+# Hashed password for the API.
+# Valid values: password hash
+hseph_webserver_api_pwhash: '{{ pihole_pw_hash }}'
+# TOTP secret for 2FA.
+# Valid values: 20-byte base32 string or empty
+hseph_webserver_api_totp_secret: ''
+# App-specific password hash.
+# Valid values: password hash or empty
+hseph_webserver_api_app_pwhash: ''
+# Allow app passwords to modify config.
+hseph_webserver_api_app_sudo: false
+# Enable CLI password authentication via temporary token.
+hseph_webserver_api_cli_pw: true
+# Regex to exclude clients from logs/stats.
+# Valid values: regex string or empty
+hseph_webserver_api_excludeclients: ''
+# Regex to exclude domains from logs/stats.
+# Valid values: regex string or empty
+hseph_webserver_api_excludedomains: ''
+# Seconds of query history to expose via API.
+# Valid values: integer as string (max 86400)
+hseph_webserver_api_maxhistory: '86400'
+# Max clients in activity graph.
+hseph_webserver_api_maxclients: '10'
+# Use global max for activity graph.
+hseph_webserver_api_client_history_global_max: true
+# Allow destructive API operations (delete queries, shutdown).
+hseph_webserver_api_allow_destructive: true
+# Temperature threshold for alerting.
+# Valid values: float
+hseph_webserver_api_temp_limit: '60.0'
+# Unit for temperature metrics.
+# Valid values: 'C', 'F', 'K'
+hseph_webserver_api_temp_unit: 'C'
+# Path to the FTL PID file.
+# Valid values: writable file path
+hseph_files_pid: '/run/pihole-FTL.pid'
+# Path to FTL's long-term query database.
+# Valid values: writable database file
+hseph_files_database: '/etc/pihole/pihole-FTL.db'
+# Path to the gravity blocklist database.
+# Valid values: writable SQLite DB file
+hseph_files_gravity: '/etc/pihole/gravity.db'
+# Temporary directory used during gravity updates.
+# Valid values: writable directory path
+hseph_files_gravity_tmp: '/tmp'
+# Database for MAC address to vendor mapping.
+# Valid values: macvendor.db path
+hseph_files_macvendor: '/etc/pihole/macvendor.db'
+# Legacy PiHole config file.
+# Valid values: setupVars.conf path
+hseph_files_setupvars: '/etc/pihole/setupVars.conf'
+# Optional path to write network traffic capture.
+# Valid values: pcap file path or empty to disable
+hseph_files_pcap: ''
+# Path to the FTL daemon log file.
+# Valid values: writable log file path
+hseph_files_log_ftl: '/var/log/pihole/FTL.log'
+# Log file for the embedded dnsmasq DNS server.
+# Valid values: writable log file path
+hseph_files_log_dnsmasq: '/var/log/pihole/pihole.log'
+# Log file for the PiHole webserver.
+# Valid values: writable log file path
+hseph_files_log_webserver: '/var/log/pihole/webserver.log'
+# Privacy level for query logs and stats.
+# Valid values: 0 (none), 1 (hide domains), 2 (hide clients/domains), 3 (anonymize all)
+hseph_misc_privacylevel: '0'
+# Delay startup by this many seconds.
+# Valid values: integer as string (0–300)
+hseph_misc_delay_startup: '0'
+# Process priority (nice value).
+# Valid values: -20 (high priority) to 19 (low), -999 disables
+hseph_misc_nice: '-10'
+# Enable stack trace resolution in crash logs.
+hseph_misc_addr2line: true
+# Load additional config from /etc/dnsmasq.d.
+hseph_misc_etc_dnsmasq_d: true
+# Additional dnsmasq config lines.
+# Valid values: string or YAML list
+hseph_misc_dnsmasq_lines: ''
+# Log extra DNS query info (only with query logging enabled).
+hseph_misc_extralogging: false
+# Enable read-only configuration mode.
+hseph_misc_readonly: false
+# Enable check for high system load.
+hseph_misc_check_load: true
+# Warn if shared memory usage exceeds this percentage.
+# Valid values: integer as string (0–100)
+hseph_misc_check_shmem: '90'
+# Warn if disk usage exceeds this percentage.
+# Valid values: integer as string (0–100)
+hseph_misc_check_disk: '90'
+# Enable detailed debug logging for this subsystem.
+hseph_debug_database: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_networking: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_locks: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_queries: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_flags: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_shmem: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_gc: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_arp: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_regex: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_api: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_tls: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_overtime: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_status: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_caps: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_dnssec: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_vectors: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_resolver: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_edns0: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_clients: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_aliasclients: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_events: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_helper: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_config: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_inotify: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_webserver: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_extra: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_reserved: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_ntp: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_netlink: false
+# Enable detailed debug logging for this subsystem.
+hseph_debug_all: false

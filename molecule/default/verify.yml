@@ -1,0 +1,16 @@
+---
+- name: Verify PiHole is functional
+  hosts: all
+  # become: true
+  tasks:
+    - name: Ensure PiHole service is running
+      ansible.builtin.service:
+        name: 'pihole-FTL'
+        state: 'started'
+        enabled: true
+
+    - name: Check pi.hole DNS lookup
+      ansible.builtin.command: dig @127.0.0.1 pi.hole +short
+      register: dig_result
+      changed_when: false
+      failed_when: dig_result.stdout == ""

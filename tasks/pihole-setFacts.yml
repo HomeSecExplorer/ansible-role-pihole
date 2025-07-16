@@ -1,0 +1,42 @@
+---
+- name: Check if Pi-hole is already installed
+  block:
+    - name: Get versions file
+      ansible.builtin.stat:
+        path: /etc/pihole/versions
+      register: pihole_file
+    - name: Set fact - Pi-hole installed
+      ansible.builtin.set_fact:
+        pihole_installed: "{{ pihole_file.stat.exists | default(false) }}"
+
+- name: Set blank version
+  ansible.builtin.set_fact:
+    pihole_core_major_version: "0"
+  when: not pihole_installed | bool
+
+- name: Get Pi-hole version
+  when: pihole_installed | bool
+  block:
+    - name: Read Pi-hole versions file
+      ansible.builtin.slurp:
+        src: /etc/pihole/versions
+      register: versions_file
+    - name: Extract major version
+      ansible.builtin.set_fact:
+        pihole_core_major_version: >
+          {{ versions_file.content | b64decode | regex_findall('^CORE_VERSION=v([0-9])', '\\1') | first }}
+
+- name: Get Pi-hole password hash from plain password
+  ansible.builtin.shell: >
+    echo -n {{ hseph_pw_plain }} | sha256sum | awk '{printf "%s",$1}' | sha256sum | awk '{printf $1}'
+  changed_when: false
+  register: pihole_pw_sha
+  when: hseph_pw_hash is not defined or hseph_pw_hash | length == 0
+
+- name: Set fact - Pi-hole password
+  ansible.builtin.set_fact:
+    pihole_pw_hash: "{{ hseph_pw_hash if (hseph_pw_hash is defined and hseph_pw_hash | length > 0) else pihole_pw_sha.stdout }}"
+
+- name: Gather package facts
+  ansible.builtin.package_facts:
+    manager: auto

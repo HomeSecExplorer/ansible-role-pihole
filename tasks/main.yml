@@ -1,0 +1,116 @@
+---
+- name: Construct simplified OS identifier
+  ansible.builtin.set_fact:
+    os_identifier: "{{ ansible_facts.distribution | lower }}-{{ ansible_facts.distribution_version if ansible_facts.distribution | lower == 'ubuntu' else ansible_facts.distribution_major_version }}"
+  tags:
+    - always
+
+- name: Check OS version and family
+  ansible.builtin.assert:
+    that:
+      - os_identifier in [
+          "debian-11",
+          "debian-12",
+          "ubuntu-20.04",
+          "ubuntu-22.04",
+          "ubuntu-24.04",
+          "rocky-8",
+          "rocky-9"
+        ]
+    fail_msg: >-
+      This role can only be run against supported OSs.
+      {{ os_identifier }} is not supported.
+    success_msg: >-
+      This role is running against a supported OS: {{ os_identifier }}
+  when: hseph_os_check
+  tags:
+    - always
+
+- name: Load main vars
+  ansible.builtin.include_vars: '../vars/main.yml'
+  tags:
+    - always
+
+- name: Uninstall PiHole
+  ansible.builtin.include_tasks:
+    file: 'pihole-uninstall.yml'
+    apply:
+      tags:
+        - uninstall
+  when:
+    - hseph_uninstall | bool
+  tags:
+    - uninstall
+
+- name: Install required packages (curl)
+  ansible.builtin.package:
+    name: '{{ ph_reqpkg }}'
+    state: 'present'
+  loop:
+    - 'curl'
+  loop_control:
+    loop_var: "ph_reqpkg"
+  tags:
+    - install
+
+- name: Set facts
+  ansible.builtin.include_tasks:
+    file: 'pihole-setFacts.yml'
+    apply:
+      tags:
+        - always
+  tags:
+    - always
+
+- name: Install PiHole
+  ansible.builtin.include_tasks:
+    file: 'pihole-install.yml'
+    apply:
+      tags:
+        - install
+  when:
+    - hseph_install | bool
+    - not pihole_installed | bool
+  tags:
+    - install
+
+- name: Set facts after install
+  ansible.builtin.include_tasks:
+    file: 'pihole-setFacts.yml'
+    apply:
+      tags:
+        - always
+  when:
+    - hseph_install | bool
+    - not pihole_installed | bool
+  tags:
+    - always
+
+
+- name: Update PiHole
+  ansible.builtin.include_tasks:
+    file: 'pihole-update.yml'
+    apply:
+      tags:
+        - update
+  when:
+    - hseph_update | bool
+    - pihole_core_major_version | int == 6
+    - pihole_installed | bool
+  tags:
+    - update
+
+- name: Configure PiHole
+  ansible.builtin.include_tasks:
+    file: 'pihole-config.yml'
+    apply:
+      tags:
+        - config
+        - install
+  when:
+    - pihole_installed | bool
+    - pihole_core_major_version | int == 6
+    - hseph_configure | bool
+  tags:
+    - config
+    - install
