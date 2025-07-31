@@ -5,7 +5,7 @@
     dest: '/etc/pihole/pihole.toml'
     owner: 'pihole'
     group: 'pihole'
-    mode: '0644'
+    mode: '0640'
   changed_when: false
 
 - name: Configure DNS entrys
@@ -55,3 +55,23 @@
   register: domainlist_result
   changed_when: domainlist_result.stdout | int > 0
   notify: update gravity
+
+- name: Get pihole status
+  ansible.builtin.command: pihole status
+  register: __hseph_status
+  changed_when: false
+
+- name: Enable blocking
+  when:
+    - hseph_dns_blocking_active | bool
+    - "'blocking is enabled' not in __hseph_status.stdout"
+  block:
+    - name: Restart PiHole to ensure .toml config is written
+      ansible.builtin.systemd:
+        name: pihole-FTL.service
+        state: restarted
+        enabled: true
+      throttle: 1
+      changed_when: false
+    - name: Enable blocking
+      ansible.builtin.command: pihole enable

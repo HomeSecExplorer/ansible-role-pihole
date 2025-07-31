@@ -1,9 +1,13 @@
 ---
 - name: Uninstall Pi-hole
-  ansible.builtin.command: pihole uninstall
+  ansible.builtin.ansible.builtin.expect:
+    command: pihole uninstall
+    responses:
+      '  [?] Are you sure you would like to remove Pi-hole? [y/N]': 'y'
+    timeout: 1
   register: pihole_uninstall
-  failed_when: false
-  changed_when: "'Removed' in pihole_uninstall.stdout"
+  failed_when: "'Uninstallation Complete' not in pihole_uninstall.stdout"
+  changed_when: "'Uninstallation Complete' in pihole_uninstall.stdout"
 
 - name: Remove dnsmasq files/folder
   ansible.builtin.file:

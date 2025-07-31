@@ -14,3 +14,9 @@
       register: dig_result
       changed_when: false
       failed_when: dig_result.stdout == ""
+
+    - name: Ensure pihole is blocking
+      ansible.builtin.command: pihole status
+      register: ph_status
+      changed_when: false
+      failed_when: "'blocking is enabled' not in ph_status.stdout"

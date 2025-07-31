@@ -18,7 +18,7 @@
     state: 'directory'
     owner: 'pihole'
     group: 'pihole'
-    mode: '0775'
+    mode: '0755'
 
 - name: Prepare Pi-Hole configuration
   ansible.builtin.template:
@@ -35,3 +35,4 @@
     creates: /etc/pihole/pihole.toml
   register: install
   failed_when: install.rc !=0
+  notify: restart piholeFTL
