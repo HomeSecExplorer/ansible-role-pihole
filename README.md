@@ -44,6 +44,17 @@ Ideal for self-hosted networks, homelabs, or as a privacy-focused DNS resolver.
 
 > ⚠️ The OS compatibility check (`hseph_os_check`) ensures supported platforms for this role - not official Pi-hole support.
 
+## Test matrix
+
+**Legend:** :white_check_mark: manual test passed - :repeat: covered in CI - :white_circle: not tested
+
+| Distro | Version | Manually verified | CI | Notes |
+|:-------|:--------|:-----------------:|:--:|:-----|
+| Debian | 12 | :white_check_mark: | :repeat: |  |
+| Debian | 11 | :white_circle: | :repeat: |  |
+| Ubuntu | 24.04 | :white_check_mark: | :repeat: |  |
+| Ubuntu | 22.04 | :white_circle: | :repeat: |  |
+
 ---
 
 ## Role Variables  (examples)
