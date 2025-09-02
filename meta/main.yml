@@ -6,13 +6,14 @@ galaxy_info:
     Supports full lifecycle management, defaults to cloudflared DoH via the homesecexplorer.cloudflared role.
     Ideal for homelabs, self-hosted DNS, and privacy-focused setups.
   role_name: pihole
-  namespace: homesecexplorer
+  namespace: HomeSecExplorer
   license: MIT
   min_ansible_version: '2.13'
 
   platforms:
     - name: Debian
       versions:
+        - trixie
         - bookworm
         - bullseye
     - name: Ubuntu

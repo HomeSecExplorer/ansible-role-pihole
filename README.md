@@ -39,7 +39,7 @@ Ideal for self-hosted networks, homelabs, or as a privacy-focused DNS resolver.
 
 > See the [Pi-hole system requirements](https://docs.pi-hole.net/main/prerequisites/) for official OS support details.
 
-- Debian 11 (Bullseye), 12 (Bookworm)
+- Debian 11 (Bullseye), 12 (Bookworm), 13 (Trixie)
 - Ubuntu 22.04 (Jammy), 24.04 (Noble)
 
 > ⚠️ The OS compatibility check (`hseph_os_check`) ensures supported platforms for this role - not official Pi-hole support.
@@ -50,6 +50,7 @@ Ideal for self-hosted networks, homelabs, or as a privacy-focused DNS resolver.
 
 | Distro | Version | Manually verified | CI | Notes |
 |:-------|:--------|:-----------------:|:--:|:-----|
+| Debian | 13 | :white_check_mark: | :repeat: |  |
 | Debian | 12 | :white_check_mark: | :repeat: |  |
 | Debian | 11 | :white_circle: | :repeat: |  |
 | Ubuntu | 24.04 | :white_check_mark: | :repeat: |  |
